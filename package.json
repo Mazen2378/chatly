@@ -20,7 +20,9 @@
 	"homepage": "https://github.com/Mazen2378/chatly#readme",
 	"dependencies": {
 		"apollo-server": "^3.5.0",
+		"bcryptjs": "^2.4.3",
 		"graphql": "^16.0.1",
+		"md5": "^2.3.0",
 		"mysql2": "^2.3.3",
 		"sequelize": "^6.12.0-alpha.1"
 	}
