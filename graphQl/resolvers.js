@@ -2,15 +2,33 @@ const { User } = require('../models');
 const gravatar = require('../utils/gravatar');
 const bcrypt = require('bcryptjs');
 const { UserInputError, AuthenticationError } = require('apollo-server-errors');
+const jwt = require('jsonwebtoken');
 const { checkPassword, checkEmail } = require('../utils/regex-checks');
+const { Op } = require('sequelize');
+
 module.exports = {
 	Query: {
-		users: async () => {
+		users: async (parent, args, ctx) => {
 			try {
-				const users = await User.findAll();
+				console.log(ctx);
+				const token = ctx.req.headers.authorization || null;
+				if (!token) {
+					throw new AuthenticationError('no token provided');
+				}
+				const decodedToken = jwt.verify(token, 'Aymmzn');
+				const users = await User.findAll({
+					where: {
+						username: {
+							[Op.ne]: decodedToken.username,
+						},
+					},
+				});
 				return users;
 			} catch (err) {
 				console.error(err);
+				if (err.message === 'jwt malformed') {
+					throw new UserInputError('the provided token is not valid');
+				}
 			}
 		},
 	},
@@ -32,6 +50,8 @@ module.exports = {
 				const correctpw = await bcrypt.compare(password, user.password);
 				console.log(correctpw);
 				if (correctpw) {
+					const token = jwt.sign({ username: user.username }, 'Aymmzn');
+					user.token = token;
 					return user;
 				} else {
 					errors.password = 'incorrect password';
@@ -77,6 +97,8 @@ module.exports = {
 					password,
 					imageURL: gravatar(email),
 				});
+				const token = jwt.sign({ username: user.username }, 'Aymmzn');
+				user.token = token;
 				return user;
 			} catch (err) {
 				console.log(err);

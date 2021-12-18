@@ -4,6 +4,7 @@ module.exports = gql`
 		username: String!
 		email: String!
 		imageURL: String
+		token: String
 	}
 	type Query {
 		users: [User]!
